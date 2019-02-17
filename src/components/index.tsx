@@ -1,2 +1,3 @@
-import SearchInput from './SearchInput';
-export { SearchInput as SearchInput };
+export * from './CommentList';
+export * from './SearchInput';
+export * from './SearchApp';

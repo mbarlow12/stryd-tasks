@@ -1,53 +1,59 @@
-import React, { Component, ChangeEvent } from 'react';
+import * as React from 'react';
 import Button from '@material-ui/core/Button';
 import Paper from '@material-ui/core/Paper';
-import TextField from '@material-ui/core/TextField';
 import Grid from '@material-ui/core/Grid';
-import { Theme } from '@material-ui/core/styles/createMuiTheme';
-import createStyles from '@material-ui/core/styles/createStyles';
-import withStyles, { WithStyles } from '@material-ui/core/styles/withStyles';
-import withRoot from '../withRoot';
+import TextField from '@material-ui/core/TextField';
+import { SEARCH_FIELD_NAME } from './Constants';
+// import { Theme } from '@material-ui/core/styles/createMuiTheme';
+// import createStyles from '@material-ui/core/styles/createStyles';
+// import withStyles, { WithStyles } from '@material-ui/core/styles/withStyles';
+// import withRoot from '../withRoot';
 
-const styles = (theme: Theme) =>
-  createStyles({
-    root: {
-      textAlign: 'center',
-      paddingTop: theme.spacing.unit * 20
-    },
-    paper: {
-      padding: theme.spacing.unit * 3,
-    }
-  });
+// const styles = (theme: Theme) =>
+//   createStyles({
+//     root: {
+//       textAlign: 'center',
+//       paddingTop: theme.spacing.unit * 20
+//     },
+//     paper: {
+//       padding: theme.spacing.unit * 3,
+//     }
+//   });
 
-type State = {
-  isSearching: boolean;
-  name: string;
-  [ key: string ]: string|boolean;
-};
+// type State = {
+//   isSearching: boolean;
+//   name: string;
+//   [ key: string ]: string|boolean;
+// };
 
-class SearchInput extends Component<WithStyles<typeof styles>, State> {
-
-  state = {
-    isSearching: false,
-    name: 'some cool text'
-  }
-
-  handleChange = ( key: string) => ( e: ChangeEvent )  => {
-    this.setState( { [key]: (e.target as HTMLInputElement).value } );
-  };
-
-  render() {
-    return (
-      <Grid container={true} className={this.props.classes.root} spacing={24} justify='center'>
-      <Grid item xs={12} md={6}>
-      <Paper className={this.props.classes.paper}>
-        <TextField id="search" type="text" value={this.state.name} variant="outlined" onChange={this.handleChange('name')}/>
-        <Button variant="contained" color="secondary">Search</Button>
-      </Paper>
-      </Grid>
-      </Grid>
-    );
-  }
+type SearchInputProps = {
+  submitQuery: ( arg?: any ) => void;
+  handleQueryTextChanged: ( arg: any ) => void;
+  commentCount: number;
 }
 
-export default withRoot( withStyles( styles )( SearchInput ) );
+export function SearchInput( props: SearchInputProps ) {
+
+  // state = {
+  //   isSearching: false,
+  //   name: 'some cool text'
+  // }
+
+  // handleChange = ( key: string) => ( e: ChangeEvent )  => {
+  //   this.setState( { [key]: (e.target as HTMLInputElement).value } );
+  // };
+
+    return (
+      <Grid item xs={12}>
+      <Paper>
+        <form onSubmit={props.submitQuery}>
+          <TextField id="search" onChange={props.handleQueryTextChanged} type="text" placeholder="enter search" variant="outlined"/>
+          <Button type='submit' variant="contained" color="secondary">Search</Button>
+        </form>
+        <p>Total Comments: {props.commentCount}</p>
+      </Paper>
+      </Grid>
+    );
+}
+
+// export default withRoot( withStyles( styles )( SearchInput ) );

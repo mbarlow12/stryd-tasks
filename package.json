@@ -3,13 +3,15 @@
   "version": "3.2.2",
   "private": true,
   "main": "src/index.tsx",
+  "proxy": "https://www.dcrainmaker.com/",
   "dependencies": {
     "@material-ui/core": "latest",
     "@types/react": "*",
     "@types/react-dom": "*",
     "react": "latest",
     "react-dom": "latest",
-    "react-scripts": "latest"
+    "react-scripts": "latest",
+    "vader-sentiment": "^1.1.3"
   },
   "devDependencies": {
     "@types/jest": "*",
