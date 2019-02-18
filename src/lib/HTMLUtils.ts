@@ -80,15 +80,10 @@ export async function parseHtmlForComments( element: HTMLHtmlElement|Document ):
 }
 
 export function queryMatch( haystack: Set<string>, ...needle: string[] ) {
-  // if ( needle instanceof Array ) {
     for ( let test of needle ) {
       if ( haystack.has( test ) ) {
         return true;
       }
     }
     return false;
-  // }
-  // else {
-  //   return haystack.has( needle );
-  // }
 }
