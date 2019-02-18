@@ -1,0 +1,17 @@
+{
+  "inversePrefixes": [
+    "not",
+    "non",
+    "no",
+    "un"
+  ],
+  "positive": [
+    "neat",
+    "interesting",
+    "cool",
+    "wow",
+    "good",
+    "great",
+    "exist"
+  ]
+}

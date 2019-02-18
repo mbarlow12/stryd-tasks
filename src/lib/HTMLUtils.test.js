@@ -80,11 +80,3 @@ it( 'parseHtmlForComments should reduce its numbers form a single query', done =
   } );
 } );
 
-// it( 'getRawHtml succeeds in fetching html', done => {
-//   const URL = 'https://www.dcrainmaker.com/2015/01/stryd-first-running.html';
-//
-//   getRawHtml( URL ).then( text => {
-//     expect( text.length ).isGreaterThan( 0 );
-//   } );
-// } );
-

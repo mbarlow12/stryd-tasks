@@ -1,74 +1,130 @@
 import React, { Component } from 'react';
-import { Theme } from '@material-ui/core/styles/createMuiTheme';
-import { parseHtmlForComments, CommentData } from '../lib/HTMLUtils';
+import { parseHtmlForComments, CommentData, queryMatch } from '../lib/HTMLUtils';
 import { getRawHtml } from '../lib/DCRainMakerFetch';
-import withStyles, { WithStyles } from '@material-ui/core/styles/withStyles';
-import withRoot from '../withRoot';
-import {SearchInput} from './SearchInput';
-import {CommentList} from './CommentList';
+import SearchInput from './SearchInput';
+import CommentList from './CommentList';
 import Grid from '@material-ui/core/Grid';
-import { SEARCH_FIELD_NAME } from './Constants';
+import Typography from '@material-ui/core/Typography';
+
+import { createMuiTheme, MuiThemeProvider, WithStyles, withStyles } from '@material-ui/core/styles';
+import { Theme } from '@material-ui/core/styles/createMuiTheme';
+import createStyles from '@material-ui/core/styles/createStyles';
+import withRoot from '../withRoot';
+
+const theme = createMuiTheme( {
+  palette: {
+    primary: {
+      main: '#D08A08'
+    }
+  }
+} );
+
+const styles = (theme: Theme) =>
+  createStyles({
+    root: {
+      marginTop: 2 * theme.spacing.unit
+    },
+    title: {
+      width: '100%',
+      textAlign: 'center'
+    }
+  } );
 
 type AppState = {
-  comments: CommentData[]|null;
-  query: string[];
-  [key: string]: CommentData[]|string[]|null;
+  comments: CommentData[];
+  query: string;
+  activeQuery: string[];
+  searchResults: CommentData[]|null;
 }
 
-interface HTMLInputEvent extends Event {
-  target: HTMLInputElement & EventTarget;
+function validateQuery( q: string ): boolean {
+  return q.match( /[^\w,]/g ) === null;
 }
 
-export class SearchApp extends Component {
+class SearchApp extends Component<WithStyles<typeof styles>> {
   state: AppState = {
-    comments: null,
-    query: [ 'enter search text' ]
+    comments: [],
+    query: '',
+    activeQuery: [],
+    searchResults: null
   }
 
   render() {
     return (
+      <MuiThemeProvider theme={theme}>
       <Grid container={true} spacing={24} justify='center'>
-        <Grid container item xs={12} sm={10} md={8} lg={8}>
+        <Grid container item xs={12} sm={10} md={8} lg={8} className={this.props.classes.root}>
+          <Typography component="h2" variant="h2" gutterBottom className={this.props.classes.title}>
+            Fetch from DCRainMaker.com
+          </Typography>
+        <Typography variant="subtitle1" gutterBottom className={this.props.classes.title}>
+          https://www.dcrainmaker.com/2015/01/stryd-first-running.html
+        </Typography>
           <SearchInput
-            commentCount={this.state.comments ? this.state.comments.length : 0}
-            submitQuery={e => this.handleQuerySubmission(e)}
-            handleQueryTextChanged={ e => this.updateQuery( e ) }/>
-          <CommentList comments={this.state.comments}/>
+            resultCount={this.state.searchResults ? this.state.searchResults.length : 0}
+            submitQuery={ ( e: React.FormEvent<HTMLInputElement> ) => this.handleQuerySubmission(e) }/>
+          <CommentList comments={this.state.searchResults ? this.state.searchResults : this.state.comments }/>
         </Grid>
       </Grid>
+      </MuiThemeProvider>
     );
   }
 
-  updateQuery( e: React.ChangeEvent<HTMLInputElement> ) {
-    let q: string|string[]|null = null;
-    const val = e.target.value;
-    if ( val.length > 0 ) {
-      q = [ e.target.value ];
-      if ( val.indexOf( ',' ) !== -1 ) {
-        q = val.split( ',' );
-      }
-    }
-    this.setState( { query: q } );
-  }
-
-  handleQuerySubmission( event: React.FormEvent<HTMLElement> ): void {
-    event.preventDefault();
+  componentDidMount() {
     getRawHtml( `2015/01/stryd-first-running.html` )
       .then( htmlText => {
         const parser = new DOMParser();
         const doc = parser.parseFromString( htmlText, 'text/html' );
         return doc;
       } )
-      .then( htmlDocument => {
-        if ( this.state.query ) {
-          return parseHtmlForComments( htmlDocument, this.state.query );
-        }
-        else {
-          return parseHtmlForComments( htmlDocument );
-        }
-      } )
+      .then( htmlDocument => parseHtmlForComments( htmlDocument ) )
       .then( commentData => {
-        this.setState( { comments: commentData } );
+        this.setState( { comments: commentData, searchResults: commentData } );
       } );
   }
+
+  handleQuerySubmission( event: React.FormEvent<HTMLInputElement> ): void {
+    event.preventDefault();
+    // if we're not currrently filtering, set active and the queriedText
+    if ( !validateQuery( this.state.query ) ) {
+      // alert user
+      alert( 'queries may only contain words and commas (no spaces)' );
+      return;
+    }
+
+    const raw = event.currentTarget.elements.search.value;
+    const query: string[] = raw.length > 0 ? raw.split( ',' ) : [];
+
+    if ( this.state.activeQuery.length === 0) {
+      // no searching is taking place, set the activeQuery and render
+      this.setState( {
+        activeQuery: query,
+        searchResults: this.filterComments( query )
+      } );
+    }
+    else {
+      // currently querying,
+      if ( query.length === 0 ) {
+        // search text deleted, remove activeQuery to display all results
+        this.setState( {
+          activeQuery: [],
+          searchResults: null
+        } );
+      }
+      else if ( query !== this.state.activeQuery ) {
+        this.setState( {
+          activeQuery: query,
+          searchResults: this.filterComments( query )
+        } );
+      }
+    }
+  }
+
+  filterComments( query: string[] ): CommentData[] {
+    return this.state.comments.filter( comment => {
+      return queryMatch( comment.tokens, ...query );
+    } );
+  }
 }
+
+export default withRoot( withStyles( styles )( SearchApp ) );

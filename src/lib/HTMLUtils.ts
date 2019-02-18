@@ -1,4 +1,5 @@
-import { htmlToTokenArray, stripHtml } from './TextUtils';
+import { htmlToTokenArray } from './TextUtils';
+import * as vader from 'vader-sentiment';
 
 const COMMENT_SELECTOR = `div[id^=comment-]`;
 const AUTHOR_SELECTOR = `.comment-author > cite`;
@@ -11,6 +12,7 @@ export type CommentData = {
  author: string|null;
  link: string|null;
  timestamp: Date|null;
+ sentiment: Number
 }
 
 function extractLinkAndTime( anchor: HTMLAnchorElement ): { link: string, timestamp: Date } {
@@ -28,7 +30,7 @@ export async function parseCommentHtml( commentDiv: Element ): Promise<CommentDa
                        .map( elem => elem.innerHTML )
                        .join('\n');
   const tokens = await htmlToTokenArray( rawContent.toLowerCase() );
-
+  const sentiment = vader.SentimentIntensityAnalyzer.polarity_scores( Array.from( tokens ).join( ' ' ) );
   const authorElement = commentDiv.querySelector( AUTHOR_SELECTOR );
   let author = 'no author';
   if ( authorElement !== null ) {
@@ -50,7 +52,7 @@ export async function parseCommentHtml( commentDiv: Element ): Promise<CommentDa
     timestamp = linkAndTime.timestamp;
   }
 
-  return { author, tokens, rawContent, link, timestamp };
+  return { author, tokens, rawContent, link, timestamp, sentiment: sentiment.compound };
 }
 
 /**
@@ -58,26 +60,16 @@ export async function parseCommentHtml( commentDiv: Element ): Promise<CommentDa
  * As such it is very specific to `https://www.dcrainmaker.com/` and its associated
  * classes and ids.
  * @param  element
- * @return {Array<CommentData>}
+ * @return {Promise<Array<CommentData>>}
  */
 
-export async function parseHtmlForComments( element: HTMLHtmlElement|Document, query?:string[] ): Promise<Array<CommentData>> {
+export async function parseHtmlForComments( element: HTMLHtmlElement|Document ): Promise<Array<CommentData>> {
   let resultPromises: Array<Promise<CommentData|null>> = [];
   const comments = element.querySelectorAll( COMMENT_SELECTOR )
 
   if ( comments.length ) {
     comments.forEach( comment => {
-      resultPromises.push( parseCommentHtml( comment ).then( commentData => {
-        if ( query ) {
-          if ( commentData.tokens && queryMatch( commentData.tokens, ...query ) ) {
-            return commentData;
-          }
-        }
-        else {
-          return commentData
-        }
-        return null;
-      } ) );
+      resultPromises.push( parseCommentHtml( comment ).then( commentData => commentData ) );
     } );
   }
   else {
