@@ -62,7 +62,7 @@ class SearchApp extends Component<WithStyles<typeof styles>> {
         </Typography>
           <SearchInput
             resultCount={this.state.searchResults ? this.state.searchResults.length : 0}
-            submitQuery={ ( e: React.FormEvent<HTMLInputElement> ) => this.handleQuerySubmission(e) }/>
+            submitQuery={ ( e: React.FormEvent<HTMLFormElement> ) => this.handleQuerySubmission(e) }/>
           <CommentList comments={this.state.searchResults ? this.state.searchResults : this.state.comments }/>
         </Grid>
       </Grid>
@@ -83,7 +83,7 @@ class SearchApp extends Component<WithStyles<typeof styles>> {
       } );
   }
 
-  handleQuerySubmission( event: React.FormEvent<HTMLInputElement> ): void {
+  handleQuerySubmission( event: React.FormEvent<HTMLFormElement> ): void {
     event.preventDefault();
     // if we're not currrently filtering, set active and the queriedText
     if ( !validateQuery( this.state.query ) ) {
@@ -91,7 +91,8 @@ class SearchApp extends Component<WithStyles<typeof styles>> {
       alert( 'queries may only contain words and commas (no spaces)' );
       return;
     }
-
+    // const t = event.currentTarget;
+    // t.elements
     const raw = event.currentTarget.elements.search.value;
     const query: string[] = raw.length > 0 ? raw.split( ',' ) : [];
 
